@@ -1,0 +1,12 @@
+lr: 0.001
+logspace_min: -4
+logspace_max: 0
+logspace_num: 250
+sigma: 0.1
+num_iters: 6
+batch_size: 1024
+spread_weight: 0.1
+ltz_weight: 1000000  # convexity regularization
+ato_weight: 1000000  # convexity regularization
+p: 0.5
+loss: BCD
