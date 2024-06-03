@@ -2,11 +2,11 @@ from pathlib import Path
 
 
 def get_cached_belief_filename(x: float, a: float):
-    return f'src/cached_belief_store/paths_beliefs_x{str(x).replace(".","")}_a{str(a).replace(".","")}.pt'
+    return f"src/cached_belief_store/paths_beliefs_x{format(x,".3g").replace(".","")}_a{format(a,".3g").replace(".","")}.pt"
 
 
-def get_jpg_filename(model_path: str, x2: float, a2: float):
-    return f'src/images/{str(model_path).split("/")[-2]}_x{str(x2).replace(".","")}_a{str(a2).replace(".","")}.jpg'
+def get_jpg_filename(model_path: str, x: float, a: float):
+    return f"src/images/{str(model_path).split("/")[-2]}_x{format(x,".3g").replace(".","")}_a{format(x,".3g").replace(".","")}.jpg"
 
 
 # TODO: these should really be env vars but oh well
