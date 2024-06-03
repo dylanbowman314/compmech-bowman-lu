@@ -5,8 +5,8 @@ def get_cached_belief_filename(x: float, a: float):
     return f"src/cached_belief_store/paths_beliefs_x{str(x).replace(".","")}_a{str(a).replace(".","")}.pt"
 
 
-def get_jpg_filename(x1: float, a1: float, x2: float, a2: float):
-    return f"src/images/x{str(x1).replace(".","")}_a{str(a1).replace(".","")}_to_x{str(x2).replace(".","")}_a{str(a2).replace(".","")}.jpg"
+def get_jpg_filename(model_path: str, x2: float, a2: float):
+    return f"src/images/{str(model_path).split("/")[-2]}_x{str(x2).replace(".","")}_a{str(a2).replace(".","")}.jpg"
 
 
 # TODO: these should really be env vars but oh well

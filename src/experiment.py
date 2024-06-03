@@ -166,7 +166,7 @@ def main(args: argparse.Namespace):
                 plt.tight_layout()
 
                 # Display the figure
-                plt.savefig(get_jpg_filename(0.15, 0.6, x, a))
+                plt.savefig(get_jpg_filename(model_path, x, a))
 
 
 if __name__ == "__main__":
