@@ -12,19 +12,17 @@ from epsilon_transformers.process.processes import Mess3
 from tqdm import tqdm
 
 from utils import get_cached_belief_filename
+from typing import Tuple, Set, List
 
 
-def derive_mixed_state_presentation(process: Process, depth: int) -> MixedStateTree:
+def generate_beliefs_for_depth(process: Process, depth: int) -> MixedStateTree:
     starting_prob_vec = np.expand_dims(process.steady_state_vector, axis=0)
-    tree_root = MixedStateTreeNode(
-        state_prob_vector=starting_prob_vec, children=set(), path=[], emission_prob=0
-    )
-    nodes = set([tree_root])
 
-    stack = deque([(tree_root, starting_prob_vec, [], 0)])
+    paths: List[Tuple[List[int], np.ndarray]] = []
+
+    stack = deque([(starting_prob_vec, [], 0)])
     while stack:
-        current_node, state_prob_vector, current_path, current_depth = stack.pop()
-        # print(state_prob_vector.shape, current_path)
+        state_prob_vector, current_path, current_depth = stack.pop()
         if current_depth < depth:
             emission_probs = _compute_emission_probabilities(
                 process, state_prob_vector[-1]
@@ -47,41 +45,24 @@ def derive_mixed_state_presentation(process: Process, depth: int) -> MixedStateT
                         else next_state_prob_vector
                     )
 
-                    child_node = MixedStateTreeNode(
-                        state_prob_vector=full_state_prob_history,
-                        path=child_path,
-                        children=set(),
-                        emission_prob=emission_probs[emission],
-                    )
-                    current_node.add_child(child_node)
+                    if current_depth == depth - 1:
+                        paths.append((child_path, full_state_prob_history))
 
                     stack.append(
                         (
-                            child_node,
                             full_state_prob_history,
                             child_path,
                             current_depth + 1,
                         )
                     )
-        nodes.add(current_node)
 
-    return MixedStateTree(
-        root_node=tree_root, process=process.name, nodes=nodes, depth=depth
-    )
+    return paths
 
 
 def generate_mess3_beliefs(x: float, a: float, sort_pairs: bool = False):
     mess3 = Mess3(x=x, a=a)
-    msp_with_full_belief_history = derive_mixed_state_presentation(mess3, 10)
-
-    tree_paths, tree_beliefs = msp_with_full_belief_history.paths_and_belief_states
-
     seq_len = 10
-    pairs = [
-        (path, beliefs)
-        for path, beliefs in zip(tree_paths, tree_beliefs)
-        if len(path) == seq_len
-    ]
+    pairs = generate_beliefs_for_depth(mess3, seq_len)
     
     if sort_pairs:
         pairs = sorted(pairs, key=lambda x: x[0])
