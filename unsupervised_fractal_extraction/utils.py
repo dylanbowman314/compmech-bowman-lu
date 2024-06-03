@@ -63,7 +63,14 @@ class CorrelationDimensionLoss(nn.Module):
 
 class BoxCountingDimensionLoss(nn.Module):
     def __init__(
-        self, epsilons, sigma=0.1, spread_weight=0.1, p=2, ltz_weight=0.1, ato_weight=0.1, device=torch.device("cuda")
+        self,
+        epsilons,
+        sigma=0.1,
+        spread_weight=0.1,
+        p=2,
+        ltz_weight=0.1,
+        ato_weight=0.1,
+        device=torch.device("cuda"),
     ):
         super(BoxCountingDimensionLoss, self).__init__()
         self.epsilons = torch.tensor(epsilons, dtype=torch.float32, device=device)

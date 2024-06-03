@@ -17,7 +17,7 @@ from epsilon_transformers.training.configs.training_configs import \
     ProcessDatasetConfig
 from torch import nn
 from torch.optim import Adam, Optimizer
-from tqdm import trange, tqdm
+from tqdm import tqdm, trange
 from transformer_lens.hook_points import HookPoint
 
 from utils import (BoxCountingDimensionLoss, CorrelationDimensionLoss,
@@ -162,7 +162,10 @@ def main(args: argparse.Namespace):
     # Show plot
     n = 5
     title = "Mess3 -- " + "\n".join(
-        ", ".join(f"{k}: {training_config_dict[k]}" for k in list(training_config_dict.keys())[i:i + n])
+        ", ".join(
+            f"{k}: {training_config_dict[k]}"
+            for k in list(training_config_dict.keys())[i : i + n]
+        )
         for i in range(0, len(training_config_dict), n)
     )
     plt.title(title, fontsize=10)
@@ -180,12 +183,24 @@ if __name__ == "__main__":
 
     # Configuration flags
     parser.add_argument("--device", default="cpu", type=str)
-    parser.add_argument("--config", default="unsupervised_fractal_extraction/train_fractal_probe_config.yaml", type=str)
+    parser.add_argument(
+        "--config",
+        default="unsupervised_fractal_extraction/train_fractal_probe_config.yaml",
+        type=str,
+    )
 
     # Output flags
-    now = str(datetime.datetime.now()).replace(" ", "--").replace(":","-")
-    parser.add_argument("--image", default="unsupervised_fractal_extraction/outputs/output_{}.jpg".format(now), type=str)
-    parser.add_argument("--probe", default="unsupervised_fractal_extraction/models/model_{}.pt".format(now), type=str)
+    now = str(datetime.datetime.now()).replace(" ", "--").replace(":", "-")
+    parser.add_argument(
+        "--image",
+        default="unsupervised_fractal_extraction/outputs/output_{}.jpg".format(now),
+        type=str,
+    )
+    parser.add_argument(
+        "--probe",
+        default="unsupervised_fractal_extraction/models/model_{}.pt".format(now),
+        type=str,
+    )
 
     args = parser.parse_args()
     main(args)
