@@ -70,6 +70,30 @@ def derive_mixed_state_presentation(process: Process, depth: int) -> MixedStateT
     )
 
 
+def generate_mess3_beliefs(x: float, a: float, sort_pairs: bool = False):
+    mess3 = Mess3(x=x, a=a)
+    msp_with_full_belief_history = derive_mixed_state_presentation(mess3, 10)
+
+    tree_paths, tree_beliefs = msp_with_full_belief_history.paths_and_belief_states
+
+    seq_len = 10
+    pairs = [
+        (path, beliefs)
+        for path, beliefs in zip(tree_paths, tree_beliefs)
+        if len(path) == seq_len
+    ]
+    
+    if sort_pairs:
+        pairs = sorted(pairs, key=lambda x: x[0])
+
+    inputs = torch.stack([torch.tensor(path) for (path, beliefs) in pairs])
+    input_beliefs = torch.stack(
+        [torch.tensor(beliefs) for (path, beliefs) in pairs]
+    )
+
+    return inputs, input_beliefs
+
+
 def main(args: argparse.Namespace):
     with open(args.config, "r") as f:
         msp_cfg = yaml.safe_load(f)
@@ -78,21 +102,7 @@ def main(args: argparse.Namespace):
         assert isinstance(x, float)
         assert isinstance(a, float)
 
-        mess3 = Mess3(x=x, a=a)
-        msp_with_full_belief_history = derive_mixed_state_presentation(mess3, 10)
-
-        tree_paths, tree_beliefs = msp_with_full_belief_history.paths_and_belief_states
-
-        seq_len = 10
-        pairs = [
-            (path, beliefs)
-            for path, beliefs in zip(tree_paths, tree_beliefs)
-            if len(path) == seq_len
-        ]
-        inputs = torch.stack([torch.tensor(path) for (path, beliefs) in pairs])
-        input_beliefs = torch.stack(
-            [torch.tensor(beliefs) for (path, beliefs) in pairs]
-        )
+        inputs, input_beliefs = generate_mess3_beliefs(x, a, sort_pairs=True)
 
         file_path = get_cached_belief_filename(x, a)
         torch.save(
