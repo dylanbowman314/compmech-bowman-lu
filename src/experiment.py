@@ -23,7 +23,7 @@ from epsilon_transformers.visualization.plots import (
 from sklearn.linear_model import LinearRegression
 from tqdm import tqdm
 
-from utils import (MODEL_PATH_005_085, MODEL_PATH_015_06,
+from src.utils import (MODEL_PATH_005_085, MODEL_PATH_015_06,
                    get_cached_belief_filename, get_jpg_filename)
 
 
@@ -69,9 +69,35 @@ def r_squared(y: torch.Tensor, y_hat: torch.Tensor):
     return r_squared
 
 
-def load_model(path_to_weights: Path, path_to_config: Path):
+def normalized_rmse(y, y_hat):
+    """
+    Calculate the normalized RMSE for each regression using standard deviation and aggregate them.
+    
+    Parameters:
+    y_true (torch.Tensor): True values, shape (batch_size, num_regs)
+    y_pred (torch.Tensor): Predicted values, shape (batch_size, num_regs)
+    
+    Returns:
+    torch.Tensor: Aggregated normalized RMSE.
+    """
+    # Calculate RMSE for each regression
+    mse = torch.mean((y - y_hat) ** 2, dim=0)
+    rmse = torch.sqrt(mse)
+    
+    # Calculate the standard deviation of each regression
+    y_std = torch.std(y, dim=0)
+    
+    # Normalize RMSE by the standard deviation
+    nrmse = rmse / y_std
+    
+    # Aggregate normalized RMSEs (mean or sum)
+    aggregated_nrmse = torch.mean(nrmse)
+    
+    return aggregated_nrmse
+
+
+def load_model(path_to_weights: Path, path_to_config: Path, device: torch.device):
     weights = torch.load(path_to_weights)
-    device = torch.device(args.device)
 
     with open(path_to_config, "r") as f:
         required_fields = [
@@ -99,13 +125,14 @@ def main(args: argparse.Namespace):
         (MODEL_PATH_015_06 / "998406400.pt", MODEL_PATH_015_06 / "train_config.json"),
         (MODEL_PATH_005_085 / "684806400.pt", MODEL_PATH_015_06 / "train_config.json"),
     ]
+    device = torch.device(args.device)
 
     with open(args.config, "r") as f:
         msp_cfg = yaml.safe_load(f)
 
     # Unchanged code for training probe + generating graphic
     for model_path, config_path in models:
-        model = load_model(model_path, config_path)
+        model = load_model(model_path, config_path, device)
         for x, a in msp_cfg:
             print(f"Evaluating: (x={x}, a={a}) for {model_path}")
 
@@ -122,6 +149,7 @@ def main(args: argparse.Namespace):
             )
 
             print(f"- R2: {r_squared(input_beliefs, belief_predictions)}")
+            print(f"- NRMSE: {normalized_rmse(input_beliefs, belief_predictions)}")
             print(f"- MSE: {torch.mean(torch.square(torch.tensor(belief_predictions) - input_beliefs))}")
 
             # TODO: any way to make image gen faster?

@@ -11,7 +11,7 @@ from epsilon_transformers.process.Process import (
 from epsilon_transformers.process.processes import Mess3
 from tqdm import tqdm
 
-from utils import get_cached_belief_filename
+from src.utils import get_cached_belief_filename
 from typing import Tuple, Set, List
 
 
@@ -75,6 +75,17 @@ def generate_mess3_beliefs(x: float, a: float, sort_pairs: bool = False):
     return inputs, input_beliefs
 
 
+def save_beliefs(inputs: torch.Tensor, input_beliefs: torch.Tensor, x: float, a: float) -> None:
+    file_path = get_cached_belief_filename(x, a)
+    torch.save(
+        {
+            "params": {"x": x, "a": a},
+            "inputs": inputs,
+            "input_beliefs": input_beliefs,
+        },
+        file_path,
+    )
+
 def main(args: argparse.Namespace):
     with open(args.config, "r") as f:
         msp_cfg = yaml.safe_load(f)
@@ -84,16 +95,7 @@ def main(args: argparse.Namespace):
         assert isinstance(a, float)
 
         inputs, input_beliefs = generate_mess3_beliefs(x, a, sort_pairs=True)
-
-        file_path = get_cached_belief_filename(x, a)
-        torch.save(
-            {
-                "params": {"x": x, "a": a},
-                "inputs": inputs,
-                "input_beliefs": input_beliefs,
-            },
-            file_path,
-        )
+        save_beliefs(inputs, input_beliefs, x, a)
 
 
 if __name__ == "__main__":
