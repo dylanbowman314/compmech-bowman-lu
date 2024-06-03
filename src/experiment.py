@@ -2,6 +2,7 @@ import argparse
 import json
 from collections import deque
 from pathlib import Path
+import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +26,6 @@ from tqdm import tqdm
 
 from src.utils import (MODEL_PATH_005_085, MODEL_PATH_015_06,
                    get_cached_belief_filename, get_jpg_filename)
-
 
 def run_activation_to_beliefs_regression(activations, ground_truth_beliefs):
 
@@ -130,9 +130,14 @@ def main(args: argparse.Namespace):
     with open(args.config, "r") as f:
         msp_cfg = yaml.safe_load(f)
 
+    r2_values = {}
+
     # Unchanged code for training probe + generating graphic
     for model_path, config_path in models:
         model = load_model(model_path, config_path, device)
+
+        model_key = "-".join(str(model_path).split("-")[-2:]) # Key is of the form "0.15-0.6"
+        r2_values[model_key] = {} 
         for x, a in msp_cfg:
             print(f"Evaluating: (x={x}, a={a}) for {model_path}")
 
@@ -147,9 +152,10 @@ def main(args: argparse.Namespace):
             regression, belief_predictions = run_activation_to_beliefs_regression(
                 acts, input_beliefs
             )
-
-            print(f"- R2: {r_squared(input_beliefs, belief_predictions)}")
-            print(f"- NRMSE: {normalized_rmse(input_beliefs, belief_predictions)}")
+            
+            r2 = r_squared(input_beliefs, belief_predictions)
+            r2_values[model_key][(x, a)] = r2
+            print(f"- R2: {r2}")
             print(f"- MSE: {torch.mean(torch.square(torch.tensor(belief_predictions) - input_beliefs))}")
 
             # TODO: any way to make image gen faster?
@@ -195,6 +201,9 @@ def main(args: argparse.Namespace):
 
                 # Display the figure
                 plt.savefig(get_jpg_filename(model_path, x, a))
+
+    with open("r2.pkl", "wb") as f:
+        pickle.dump(r2_values, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":
