@@ -21,8 +21,7 @@ Assuming you already have a Python environment set up, clone the `epsilon-transf
         - `--device` to set the PyTorch device, which speeds up probe training substantially when set to a GPU.
 - The `visualization` folder contains two IPython notebooks, `MSP_visualization.ipynb` and `r2_visualization.ipynb`.
     - `MSP_visualization.ipynb`: The primary section is titled Mess3 MSP: Chaos Game Fractal, and plots Mess3 MSPs for various alpha and x values. See examples for usage. The code also supports arbitrary 3-state HMMs defined by emission_and_transition_pi.
-    - `r2_visualization.ipynb`: 
-
+    - `r2_visualization.ipynb`: Plot the $R^2$ values (via colors) for how good the linear fit is from transformer activations to Mess3 MSP geometries, for different values of alpha and x. Can observe that $R^2$ is approximately unimodal and convex, and maximized close to the actual Mess3 parameter values that generated the transformer's training sequence.
 ### Evolutionary Algorithms
 
 - `evo_alg_demo.ipynb` runs evolutionary search over parameter sets using probe $R^2$ as a reward signal.
