@@ -202,7 +202,7 @@ def main(args: argparse.Namespace):
                 # Display the figure
                 plt.savefig(get_jpg_filename(model_path, x, a))
 
-    with open("r2.pkl", "wb") as f:
+    with open("../visualization/r2.pkl", "wb") as f:
         pickle.dump(r2_values, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
