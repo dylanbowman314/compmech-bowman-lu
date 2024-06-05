@@ -15,8 +15,12 @@ Assuming you already have a Python environment set up, clone the `epsilon-transf
 ### Exploratory Analysis
 
 - The `src` folder contains two scripts, `generate_paths_and_beliefs.py` and `experiment.py`. These scripts are meant to be run sequentially.
-    - `generate_paths_and_beliefs/py`: For each set of parameters in `src/msp_cfg.yaml`, generate the optimal Bayesian belief states for every possible input sequence. The output tensor is cached in a `.pt` file in `src/cached_belief_store`. `src/cached_belief_store` comes pre-populated with the beliefs from our grid search so there isn't a need to run this script unless you're generating beliefs for new sets of parameters.
-    - `experiment.py`: For each set of parameters in `src/msp_cfg.yaml` and for each 
+    - `generate_paths_and_beliefs/py`: For each set of parameters in `src/msp_cfg.yaml`, generate the optimal Bayesian belief states for every possible input sequence. The output tensor is cached in a `.pt` file in `src/cached_belief_store`. `src/cached_belief_store` comes pre-populated with the beliefs from our grid search so there isn't a need to run this script unless you're generating beliefs for new sets of parameters. 
+    - `experiment.py`: For each set of parameters in `src/msp_cfg.yaml` and for each of the pretrained models (Mess3(0.15, 0.6) and Mess3(0.05, 0.85)), we train a new probe and print out its $R^2$ and MSE scores. By default, this script will also produce reconstruction visualizations in `src/images` folder for each set of parameters.
+        - `--no-image` to disable reconstruction image. Image takes >1 min to generate, so this flag increases performance substantially for the probe training.
+        - `--device` to set the PyTorch device, which speeds up probe training substantially when set to a GPU.
 
 
 ### Evolutionary Algorithms
+
+- `evo_alg_demo.ipynb` runs evolutionary search over parameter sets using probe $R^2$ as a reward signal.
