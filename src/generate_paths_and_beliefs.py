@@ -13,9 +13,14 @@ from tqdm import tqdm
 
 from src.utils import get_cached_belief_filename
 from typing import Tuple, Set, List
+import itertools
+import time
 
 
 def generate_beliefs_for_depth(process: Process, depth: int) -> MixedStateTree:
+    """
+    Deprecated.
+    """
     starting_prob_vec = np.expand_dims(process.steady_state_vector, axis=0)
 
     paths: List[Tuple[List[int], np.ndarray]] = []
@@ -59,18 +64,45 @@ def generate_beliefs_for_depth(process: Process, depth: int) -> MixedStateTree:
     return paths
 
 
+def multiply_beliefs(batch1: torch.Tensor, batch2: torch.Tensor):
+    accumulated_tm = torch.einsum('bij,cjk->bcik', batch1, batch2)
+    num_symbols, num_seqs, n, _ = accumulated_tm.shape
+    accumulated_tm = accumulated_tm.reshape(num_symbols * num_seqs, n, n)
+    return accumulated_tm
+
+
+def compute_all_beliefs(process: Process, seq_len: int, device=torch.device("cpu")):
+    tm = torch.tensor(process.transition_matrix, dtype=torch.float32, device=device)
+    accumulated_tm = torch.eye(len(tm), dtype=torch.float32, device=device).unsqueeze(0)
+
+    for i in range(seq_len):
+        accumulated_tm = multiply_beliefs(tm, accumulated_tm)
+
+    return accumulated_tm
+
+
+def compute_all_beliefs_with_history(process: Process, seq_len: int, device=torch.device("cpu")):
+    tm = torch.tensor(process.transition_matrix, dtype=torch.float32, device=device)
+    accumulated_tm = torch.eye(len(tm), dtype=torch.float32, device=device).unsqueeze(0)
+
+    layers = []
+    for i in range(seq_len):
+        accumulated_tm = multiply_beliefs(tm, accumulated_tm)
+        layers.append(accumulated_tm.repeat_interleave((tm.shape[-1])**(seq_len - i - 1), dim=0))
+
+    return layers
+
+
 def generate_mess3_beliefs(x: float, a: float, sort_pairs: bool = False):
+    st = time.time()
     mess3 = Mess3(x=x, a=a)
     seq_len = 10
-    pairs = generate_beliefs_for_depth(mess3, seq_len)
-    
-    if sort_pairs:
-        pairs = sorted(pairs, key=lambda x: x[0])
 
-    inputs = torch.stack([torch.tensor(path) for (path, beliefs) in pairs])
-    input_beliefs = torch.stack(
-        [torch.tensor(beliefs) for (path, beliefs) in pairs]
-    )
+    prior = torch.tensor([1/3, 1/3, 1/3], device="cpu")
+    input_beliefs = prior @ torch.stack(compute_all_beliefs_with_history(mess3, seq_len)).permute(1,0,2,3)
+    input_beliefs = input_beliefs / torch.sum(input_beliefs, dim=2).unsqueeze(2)
+    
+    inputs = torch.tensor(list(itertools.product([0, 1, 2], repeat=10)), dtype=torch.int)
 
     return inputs, input_beliefs
 

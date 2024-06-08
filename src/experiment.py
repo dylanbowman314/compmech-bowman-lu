@@ -22,10 +22,12 @@ from epsilon_transformers.training.configs.training_configs import \
 from epsilon_transformers.visualization.plots import (
     _project_to_simplex, plot_ground_truth_and_evaluated_2d_simplex)
 from sklearn.linear_model import LinearRegression
+# from cuml.linear_model import LinearRegression
 from tqdm import tqdm
 
 from src.utils import (MODEL_PATH_005_085, MODEL_PATH_015_06,
                    get_cached_belief_filename, get_jpg_filename)
+
 
 def run_activation_to_beliefs_regression(activations, ground_truth_beliefs):
 
